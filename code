@@ -1,0 +1,81 @@
+#practice and checked in google colab
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import StandardScaler
+import os
+
+# Function to load and process the uploaded dataset
+def load_and_train_model(file_path):
+    if not os.path.exists(file_path):
+        print(f"File '{file_path}' does not exist!")
+        return None
+
+    # Load the dataset
+    df = pd.read_csv(file_path)
+
+    # Ensure the necessary columns are in the dataset
+    required_columns = ['Length', 'Breadth', 'Height', 'Num_Rooms', 'Num_Kitchens', 'Num_Living_Rooms', 'Num_Washrooms', 'Price']
+    if not all(col in df.columns for col in required_columns):
+        print(f"Dataset must contain the columns: {required_columns}")
+        return None
+    
+    # Define features and target variable
+    X = df[['Length', 'Breadth', 'Height', 'Num_Rooms', 'Num_Kitchens', 'Num_Living_Rooms', 'Num_Washrooms']]
+    y = df['Price']
+
+    # Train/test split
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Standardizing the data
+    scaler = StandardScaler()
+    X_train_scaled = scaler.fit_transform(X_train)
+    X_test_scaled = scaler.transform(X_test)
+
+    # Initialize and train the model
+    model = LinearRegression()
+    model.fit(X_train_scaled, y_train)
+    
+    return model, scaler
+
+# Function to make predictions based on user input
+def predict_price(model, scaler):
+    print("Please provide the following details to predict the house price:")
+    
+    # Ask the user for input
+    length = float(input("Length of the house (in feet): "))
+    breadth = float(input("Breadth of the house (in feet): "))
+    height = float(input("Height of the house (in feet): "))
+    num_rooms = int(input("Number of rooms: "))
+    num_kitchens = int(input("Number of kitchens: "))
+    num_living_rooms = int(input("Number of living rooms: "))
+    num_washrooms = int(input("Number of washrooms: "))
+    
+    # Prepare the input data for prediction
+    user_input = [[length, breadth, height, num_rooms, num_kitchens, num_living_rooms, num_washrooms]]
+    
+    # Standardize the input (same as training data)
+    user_input_scaled = scaler.transform(user_input)
+    
+    # Make prediction
+    predicted_price = model.predict(user_input_scaled)
+    
+    # Display the estimated price
+    print(f"The estimated price of the house is: ${predicted_price[0]:,.2f}")
+
+# Main execution logic
+def main():
+    # Prompt the user to upload the dataset (providing file path manually)
+    print("Please make sure your dataset CSV file is ready to be uploaded.")
+    file_path = input("Enter the full file path to your dataset CSV file (e.g., C:/path/to/house_price_dataset.csv): ")
+    
+    # Train the model using the uploaded dataset
+    model, scaler = load_and_train_model(file_path)
+    
+    if model and scaler:
+        # Once the model is trained, ask the user for input and predict the price
+        predict_price(model, scaler)
+
+# Run the main function
+if __name__ == "__main__":
+    main()
